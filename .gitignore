@@ -6,3 +6,6 @@ data/
 logs/
 .env
 .env.local
+.downloads/
+.vscode/
+*.session
