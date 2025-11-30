@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telegram_media_loader"
+version = "0.1.0"
+description = "Download media from Telegram chats via Telethon, keeping metadata and a download ledger."
+authors = [
+    { name = "Codex", email = "codex@example.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "telethon>=1.31",
+    "python-dotenv>=1.0",
+    "PyYAML>=6.0",
+    "tqdm>=4.65",
+    "python-dateutil>=2.8",
+    "tzdata>=2023.3; platform_system == \"Windows\""
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+]
+
+[project.urls]
+Homepage = "https://example.com/telegram_media_loader"
+
+[tool.setuptools.packages.find]
+where = ["src"]
