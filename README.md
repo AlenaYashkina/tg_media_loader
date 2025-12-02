@@ -1,32 +1,72 @@
 # Telegram Media Loader
 
-A polished showcase of a Telegram automation tool that downloads every media file via a user session, catalogs it into topic-aware folders, and keeps full metadata/ledger coverage with both CLI and Tkinter landing pages.
+Desktop + CLI tool that logs into Telegram via a **user session** and downloads media from:
 
-## Why it catches recruiters' eyes
+- private chats  
+- group chats / supergroups  
+- channels (with or without topics)
 
-- **Production-ready reliability** – deduplicated downloads, logging to `logs/app.log`, and a SQLite ledger (`data/state.sqlite`) prove you can ship resilience.
-- **Forum/topic intelligence** – media is grouped by forum topics, album IDs, and dates, demonstrating non-trivial filesystem craftsmanship.
-- **Dual UX proof** – the CLI and GUI share a single backend, highlighting your ability to compose reusable application layers.
-- **Observability at scale** – every download writes a structured `metadata.ndjson` line, so you can confidently talk about monitoring and analytics.
+Files are **deduplicated**, grouped into **topic / album / date** folders, and described in both a **metadata ndjson log** and a **SQLite ledger**, so you can safely re-run the loader without getting duplicates.
+
+Originally built to feed a photo-report automation pipeline, but designed as a **general-purpose Telegram media archiver**.
+
+---
+
+## Highlights
+
+- **Works with everything** – private chats, groups, supergroups, channels, forum topics.
+- **Any media type** – photos, videos, documents, audio/voice, stickers, GIFs, “other” attachments.
+- **No duplicates on rerun** – previously downloaded media are tracked in SQLite and skipped.
+- **Album-aware** – media sent as a Telegram album are saved together in their own subfolder.
+- **Date-based layout** – inside each topic, files are split by `YYYY-MM-DD` folders for quick navigation.
+- **Full metadata trail** – every file gets a line in `metadata.ndjson` plus a row in a SQLite ledger.
+- **Two entry points** – command-line interface and a Tkinter GUI built on top of the same backend.
+
+---
 
 ## Stack
 
-- Python 3.11+ (works on 3.10 once Telethon is installed)
-- [Telethon](https://github.com/LonamiWebs/Telethon) for Telegram API access via a user session
-- Tkinter (standard library) for the desktop GUI
-- `python-dotenv`, `PyYAML`, `tqdm`, and `tzdata` for configuration, progress, and timezone handling
+- Python 3.11+ (also runs on 3.10 once Telethon is installed)
+- [Telethon](https://github.com/LonamiWebs/Telethon) for Telegram API access (user session)
+- Tkinter (standard library) for the GUI
+- `python-dotenv`, `PyYAML`, `tqdm`, `tzdata` for config, progress and timezone handling
+- SQLite for the download ledger
+
+---
 
 ## Installation
 
 ```bash
-git clone https://example.com/telegram_media_loader.git
-cd telegram_media_loader
+git clone https://github.com/AlenaYashkina/tg_media_loader.git
+cd tg_media_loader
+
 python -m venv .venv
-./.venv/Scripts/activate   # on Windows
+# Windows
+.\.venv\Scripts
+ctivate
+# Linux/macOS
+# source .venv/bin/activate
+
 pip install -e .
 ```
 
-Copy `.env.example` to `.env` and fill in `TG_API_ID`, `TG_API_HASH`, `TG_PHONE_NUMBER`, and `TG_SESSION_NAME`. Copy `config.example.yaml` to `config.yaml` to set defaults such as:
+Copy the example config files and adjust them:
+
+```bash
+cp .env.example .env
+cp config.example.yaml config.yaml
+```
+
+Fill in in `.env`:
+
+```env
+TG_API_ID=...
+TG_API_HASH=...
+TG_PHONE_NUMBER=...
+TG_SESSION_NAME=telegram_media_loader
+```
+
+And in `config.yaml` set defaults like:
 
 ```yaml
 output_root: downloads
@@ -43,86 +83,127 @@ sqlite_path: data/state.sqlite
 tz: UTC
 ```
 
-### Environment secrets
-
-The loader reads sensitive values from `.env`: `TG_API_ID`, `TG_API_HASH`, `TG_PHONE_NUMBER`, and (optional) `TG_SESSION_NAME`. CLI flags override config, and config overrides `.env` when defaults collide.
+---
 
 ## CLI usage
 
+Basic example:
+
 ```bash
-python -m telegram_media_loader \
-  --chat-url https://t.me/some_channel \
-  --output-root "D:/tg_downloads" \
-  --date-from 2024-01-01 \
-  --date-to 2024-03-31 \
-  --media-types photo,video,document \
-  --config config.yaml \
-  --log-level INFO
+python -m telegram_media_loader   --chat-url https://t.me/some_channel   --output-root "D:/tg_downloads"   --date-from 2024-01-01   --date-to 2024-03-31   --media-types photo,video,document   --config config.yaml   --log-level INFO
 ```
 
-### CLI options
+### Main options
 
-- `--chat-url`: required; accepts `https://t.me/<username>`, `https://t.me/c/<internal_id>`, or the special values `me`/`self`.
-- `--output-root`: overrides the YAML root path.
-- `--date-from` / `--date-to`: inclusive UTC datetimes (e.g. `2024-02-01`, `2024-02-01T12:30`). Missing values fetch the entire history.
-- `--media-types`: comma-separated list (photo, video, document, voice, audio, sticker, gif, other).
-- `--config`: YAML or JSON config file (defaults to `config.yaml`).
-- `--log-level`: overrides INFO, DEBUG, or ERROR for both console and file output.
+- `--chat-url` – required. Supports:
+  - `https://t.me/<username>`
+  - `https://t.me/c/<internal_id>` (private/supergroups)
+  - `me` / `self` for your personal “Saved Messages”
+- `--output-root` – base folder for downloads (overrides `output_root` in config).
+- `--date-from`, `--date-to` – inclusive UTC datetimes (`YYYY-MM-DD` or `YYYY-MM-DDTHH:MM`).  
+  If omitted, the full history is scanned.
+- `--media-types` – comma-separated list:
+  `photo, video, document, voice, audio, sticker, gif, other`.
+- `--config` – path to YAML/JSON config (defaults to `config.yaml`).
+- `--log-level` – `INFO` (default), `DEBUG`, or `ERROR`.
 
-## Metadata
+Environment variables from `.env` are used as defaults; CLI flags override config, config overrides `.env`.
 
-Every chat writes `metadata.ndjson` inside `<output_root>/<chat_slug>/metadata.ndjson`. Each line records fields such as:
+---
 
-```
-chat_id, chat_username, chat_title, chat_type,
-message_id, grouped_id, topic_id, topic_title, date_iso (UTC),
-sender_id, sender_username, sender_display_name, text_raw, reply_to_message_id,
-media_type, file_path (relative), file_size, mime_type,
-has_spoiler, is_forwarded, forward_from_id, forward_from_username, extra
-```
+## Folder structure & metadata
 
-This structured output is ideal evidence of observability for recruiters.
+For each chat, the loader builds a tree like:
 
-## Filesystem layout
-
-```
+```text
 <output_root>/
   <chat_slug>/
+    metadata.ndjson
     <topic_slug_or___root>/
       YYYY-MM-DD/
-        <message_id>_<media_index>_<media_type>.<ext>
+        <album_or_single>/
+          <message_id>_<media_index>_<media_type>.<ext>
 ```
 
-Topic folders come from the forum title or fallback ID (`topic-<id>`); albums use the first message ID as a subfolder so bulk uploads stay together.
+- **Chat slug** – derived from username or internal id.  
+- **Topic folder** – forum topic title, or `topic-<id>`; for non-topic chats, `__root`.
+- **Date folder** – message date in `YYYY-MM-DD`.
+- **Album folder** – when Telegram sends an album (`grouped_id`), all files land in a shared subfolder.
+- **File name** – includes `message_id`, index inside the message, and media type.
 
-## SQLite ledger
+### Metadata log
 
-`data/state.sqlite` tracks the `downloaded_media` table with columns like:
+Each downloaded message appends a JSON line to:
+
+```text
+<output_root>/<chat_slug>/metadata.ndjson
+```
+
+Typical fields:
+
+- `chat_id`, `chat_username`, `chat_title`, `chat_type`
+- `message_id`, `grouped_id`, `topic_id`, `topic_title`, `date_iso`
+- `sender_id`, `sender_username`, `sender_display_name`
+- `text_raw`, `reply_to_message_id`
+- `media_type`, `file_path`, `file_size`, `mime_type`
+- `has_spoiler`, `is_forwarded`, `forward_from_id`, `forward_from_username`, `extra`
+
+This is handy for later analysis or building your own reports/dashboards.
+
+### SQLite ledger
+
+`data/state.sqlite` keeps a `downloaded_media` table with fields like:
 
 - `chat_id`, `message_id`, `media_index`, `media_type`
-- `file_path`, `file_size`, `mime_type`, `date_iso`, `downloaded_at`, `status`
-- A unique constraint on `(chat_id, message_id, media_index)` ensures reruns skip repeats.
+- `file_path`, `file_size`, `mime_type`
+- `date_iso`, `downloaded_at`, `status`
 
-Failed attempts are logged, and metadata entries are still appended so you can diagnose retries.
+A unique constraint on `(chat_id, message_id, media_index)` ensures that repeated runs skip media that was already downloaded.
 
-## Logging
+### Logging
 
-`logs/app.log` records structured entries such as `[2024-01-01 12:00:00] INFO telegram_media_loader.cli - message`. Console output mirrors INFO+ERROR logs to keep the experience consistent.
+Structured logs are written to `logs/app.log`, for example:
+
+```text
+[2024-01-01 12:00:00] INFO telegram_media_loader.downloader - Saved photo ... 
+```
+
+Console output mirrors `INFO`/`ERROR` messages.
+
+---
 
 ## GUI
 
-Launch the GUI with:
+Run the desktop GUI with:
 
 ```bash
 python -m telegram_media_loader.gui
-```
-
-Or simply run:
-
-```bash
+# or
 python gui.py
 ```
 
-It prompts for phone/code (plus 2FA if needed), then reuses the CLI backend. The fields mirror CLI flags and support right-click copy/paste for URL/output reuse. Hit **Start** to run the background download thread and watch log output in the window.
+Features:
 
-![GUI dashboard](docs/screenshots/gui-dashboard.png)
+- Auth flow with phone, SMS code and 2FA support.
+- Fields for chat URL, output root, media types and date filters.
+- Start/Stop controls and a live log pane.
+- Same backend as the CLI, so behaviour and folder layout stay consistent.
+
+---
+
+## Typical use cases
+
+- Back up media from important channels or private chats.
+- Pull training datasets (photos, documents, etc.) from Telegram.
+- Feed downstream automation (e.g. photo-report generators) with a clean, deduplicated media archive.
+
+---
+
+## About the author
+
+Built by **Alena Yashkina** — lighting engineer turned AI‑automation developer.  
+Portfolio and contact links:
+
+- GitHub: https://github.com/AlenaYashkina
+- LinkedIn: https://www.linkedin.com/in/alena-yashkina-a9994a35a/
+
