@@ -197,3 +197,13 @@ Features:
 - Pull training datasets (photos, documents, etc.) from Telegram.
 - Feed downstream automation (e.g. photo-report generators) with a clean, deduplicated media archive.
 
+---
+
+## About the author
+
+Built by **Alena Yashkina** — lighting engineer turned AI‑automation developer.  
+Portfolio and contact links:
+
+- GitHub: https://github.com/AlenaYashkina
+- LinkedIn: https://www.linkedin.com/in/alena-yashkina-a9994a35a/
+
