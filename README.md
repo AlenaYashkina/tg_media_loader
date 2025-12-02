@@ -189,6 +189,10 @@ Features:
 - Start/Stop controls and a live log pane.
 - Same backend as the CLI, so behaviour and folder layout stay consistent.
 
+### GUI preview
+
+![Telegram Media Loader GUI](docs/screenshots/gui-dashboard.png)
+
 ---
 
 ## Typical use cases
@@ -206,4 +210,3 @@ Portfolio and contact links:
 
 - GitHub: https://github.com/AlenaYashkina
 - LinkedIn: https://www.linkedin.com/in/alena-yashkina-a9994a35a/
-
