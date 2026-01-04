@@ -1,0 +1,145 @@
+Metadata-Version: 2.4
+Name: telegram_media_loader
+Version: 0.1.0
+Summary: Download media from Telegram chats via Telethon, keeping metadata and a download ledger.
+Author-email: Codex <codex@example.com>
+Project-URL: Homepage, https://example.com/telegram_media_loader
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Microsoft :: Windows
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: telethon>=1.31
+Requires-Dist: python-dotenv>=1.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: tqdm>=4.65
+Requires-Dist: PySimpleGUI>=4.70
+Requires-Dist: python-dateutil>=2.8
+Requires-Dist: tzdata>=2023.3; platform_system == "Windows"
+
+# Telegram Media Loader
+
+Download media from Telegram chats and channels via a user account, storing files inside a structured directory tree together with ndjson metadata, a SQLite ledger, and optional desktop UI.
+
+## Stack
+
+- Python 3.11+ (runs fine on 3.10 with Telethon installed)
+- [Telethon](https://github.com/LonamiWebs/Telethon) for Telegram access with a user session
+- [PySimpleGUI](https://pysimplegui.org/) for the lightweight desktop wrapper
+- `python-dotenv`, `PyYAML`, `tqdm`, and `tzdata` for configuration, logging, and progress
+
+## Installation
+
+```bash
+git clone https://example.com/telegram_media_loader.git
+cd telegram_media_loader
+python -m venv .venv
+./.venv/Scripts/activate   # on Windows
+pip install -e .
+```
+
+Create a `.env` (see `.env.example`) and supply your `TG_API_ID`, `TG_API_HASH`, phone, and session name.
+
+Copy `config.example.yaml` to `config.yaml` to tweak defaults:
+
+```yaml
+output_root: downloads
+default_media_types:
+  - photo
+  - video
+  - document
+  - voice
+  - audio
+  - sticker
+  - gif
+log_level: INFO
+sqlite_path: data/state.sqlite
+tz: UTC
+```
+
+## CLI Usage
+
+```bash
+python -m telegram_media_loader \
+  --chat-url https://t.me/some_channel \
+  --output-root "D:/tg_downloads" \
+  --date-from 2024-01-01 \
+  --date-to 2024-03-31 \
+  --media-types photo,video,document
+```
+
+- `--chat-url` accepts `https://t.me/<username>` or `https://t.me/c/<id>` (and `me`/`self` for Saved Messages).
+- `--output-root` overrides the `config.yaml` default.
+- Dates accept `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM[:SS][±TZ]`. Missing timezone assumes the configured `tz`.
+- `--media-types` is a comma-separated list; defaults to the config’s `default_media_types`.
+- `--log-level` can override `INFO`, `DEBUG`, `ERROR`.
+
+### Metadata
+
+Each chat gets a `metadata.ndjson` at `<output_root>/<chat_slug>/metadata.ndjson`. Every line contains fields such as:
+
+```
+chat_id,
+chat_username,
+chat_title,
+chat_type,
+message_id,
+grouped_id,
+topic_id,
+topic_title,
+date_iso (UTC),
+sender_id,
+sender_username,
+sender_display_name,
+text_raw,
+reply_to_message_id,
+media_type,
+file_path (relative),
+file_size,
+mime_type,
+has_spoiler,
+is_forwarded,
+forward_from_id,
+forward_from_username,
+extra
+```
+
+## Filesystem layout
+
+```
+<output_root>/
+  <chat_slug>/
+    <topic_slug_or___root>/
+      YYYY-MM-DD/
+        <message_id>_<media_index>_<media_type>.<ext>
+```
+
+File slugs are sanitized (`chat_<id>` fallback) and forum topics are pulled when available.
+
+## SQLite ledger
+
+By default a file at `data/state.sqlite` tracks downloads in `downloaded_media`:
+
+- `chat_id`, `message_id`, `media_index`, `media_type`
+- `file_path`, `file_size`, `mime_type`, `date_iso`, `downloaded_at`, `status`
+- unique constraint on `(chat_id, message_id, media_index)` for successful entries
+
+Successful downloads are skipped on re-runs, but metadata lines are still emitted and failed attempts logged.
+
+## Logging
+
+Logs are written to `logs/app.log` with entries like `[2024-01-01 12:00:00] INFO telegram_media_loader.cli - message`. Console output mirrors INFO+ERROR.
+
+## GUI
+
+Launch the desktop wrapper with:
+
+```bash
+python -m telegram_media_loader.gui
+```
+
+Fill the form (chat URL, output root, optional dates, and media checkboxes), then press **Start**. Logs appear at the bottom and the downloader runs in a background thread.
+
+## Notes
+
+- Telethon requires a valid session file; ensure you have authenticated once (e.g., via Telethon itself) before running the loader.
+- GUI and CLI share common core logic so behavior is consistent across interfaces.
