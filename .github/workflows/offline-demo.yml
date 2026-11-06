@@ -15,3 +15,5 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install -e .
       - run: python examples/offline_layout_demo.py
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/test_fake_telegram_download.py
