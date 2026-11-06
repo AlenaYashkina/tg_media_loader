@@ -18,7 +18,7 @@ Originally built to feed a photo-report automation pipeline, but designed as a *
 - **Any media type** – photos, videos, documents, audio/voice, stickers, GIFs, “other” attachments.
 - **No duplicates on rerun** – previously downloaded media are tracked in SQLite and skipped.
 - **Album-aware** – media sent as a Telegram album are saved together in their own subfolder.
-- **Date-based layout** – inside each topic, files are split by `YYYY-MM-DD` folders for quick navigation.
+- **Message-date layout** – folders use the Telegram message timestamp, **not necessarily the original camera capture date**; timezone configuration can change the calendar day.
 - **Full metadata trail** – every file gets a line in `metadata.ndjson` plus a row in a SQLite ledger.
 - **Two entry points** – command-line interface and a Tkinter GUI built on top of the same backend.
 
@@ -148,7 +148,7 @@ Typical fields:
 - `media_type`, `file_path`, `file_size`, `mime_type`
 - `has_spoiler`, `is_forwarded`, `forward_from_id`, `forward_from_username`, `extra`
 
-This is handy for later analysis or building your own reports/dashboards.
+This is handy for later analysis or building your own reports/dashboards. **Privacy warning:** message metadata can include personal identifiers, message texts and file paths. Do not commit real exports or active session files to public repositories.
 
 ### SQLite ledger
 
