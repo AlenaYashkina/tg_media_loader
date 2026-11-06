@@ -7,7 +7,7 @@ name = "telegram_media_loader"
 version = "0.1.0"
 description = "Download media from Telegram chats via Telethon, keeping metadata and a download ledger."
 authors = [
-    { name = "Codex", email = "codex@example.com" }
+    { name = "Alena Yashkina" }
 ]
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,7 +25,7 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://example.com/telegram_media_loader"
+Homepage = "https://github.com/AlenaYashkina/tg_media_loader"
 
 [tool.setuptools.packages.find]
 where = ["src"]

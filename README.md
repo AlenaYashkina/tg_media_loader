@@ -85,6 +85,16 @@ tz: UTC
 
 ---
 
+## Offline example — no Telegram account required
+
+Run this from the repo root after `python -m pip install -e .`:
+
+```bash
+python examples/offline_layout_demo.py
+```
+
+The script builds a **fictional** media tree in a temporary directory, then verifies grouping by album, the UTC midnight boundary and idempotency across a second pass. It prints the paths and a PASS line; it never connects to Telegram and leaves no downloaded content behind. It uses text placeholders rather than claiming to provide original camera images.
+
 ## CLI usage
 
 Basic example:

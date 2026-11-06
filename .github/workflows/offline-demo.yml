@@ -1,0 +1,17 @@
+name: Offline media layout demo
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  offline-layout:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e .
+      - run: python examples/offline_layout_demo.py
