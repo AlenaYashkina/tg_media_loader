@@ -111,6 +111,10 @@ Environment variables from `.env` are used as defaults; CLI flags override confi
 
 ---
 
+## Synthetic metadata example
+
+See [examples/metadata.sample.ndjson](examples/metadata.sample.ndjson) for a short, **fictional** NDJSON fixture. File paths in it are illustrative; no sample images are provided. Previous tracked download/cluster state was removed from the current version. **Old Git history still requires a separate privacy audit** and must not be assumed clean.
+
 ## Folder structure & metadata
 
 For each chat, the loader builds a tree like:
