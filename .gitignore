@@ -11,3 +11,11 @@ logs/
 .vscode/
 *.session
 *.session-journal
+# Generated downloads, metadata and build artifacts
+downloads/
+*.egg-info/
+*.sqlite
+*.sqlite3
+*.db
+*.log
+*.jsonl
