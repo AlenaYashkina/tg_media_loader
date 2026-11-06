@@ -36,26 +36,26 @@ Originally built to feed a photo-report automation pipeline, but designed as a *
 
 ## Installation
 
-```bash
+```powershell
 git clone https://github.com/AlenaYashkina/tg_media_loader.git
 cd tg_media_loader
 
 python -m venv .venv
-# Windows
-.\.venv\Scripts
-ctivate
-# Linux/macOS
-# source .venv/bin/activate
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+# On Linux/macOS, use: source .venv/bin/activate
 
-pip install -e .
+python -m pip install -e .
 ```
 
-Copy the example config files and adjust them:
+Copy the example config files and adjust them (PowerShell):
 
-```bash
-cp .env.example .env
-cp config.example.yaml config.yaml
+```powershell
+Copy-Item .env.example .env
+Copy-Item config.example.yaml config.yaml
 ```
+
+On Linux/macOS use `cp` instead.
 
 Fill in in `.env`:
 
@@ -209,8 +209,8 @@ Features:
 
 ## About the author
 
-Built by **Alena Yashkina** — lighting engineer turned AI‑automation developer.  
+Built by **Alena Yashkina** — workflow automation practitioner using AI-assisted coding.  
 Portfolio and contact links:
 
 - GitHub: https://github.com/AlenaYashkina
-- LinkedIn: https://www.linkedin.com/in/alena-yashkina-a9994a35a/
+- LinkedIn: https://www.linkedin.com/in/alena-yashkina
