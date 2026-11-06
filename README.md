@@ -1,3 +1,5 @@
+[Русская версия](README.ru.md)
+
 # Telegram Media Loader
 
 Desktop + CLI tool that logs into Telegram via a **user session** and downloads media from:
